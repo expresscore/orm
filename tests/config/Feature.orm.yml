@@ -1,0 +1,35 @@
+entity: test\orm\helpers\Feature
+repository: expresscore\orm\Repository
+fields:
+  id:
+    type: int
+    id: true
+    extra: auto_increment
+  FK_Usr_createdBy:
+    type: entity
+    entityClass: test\orm\helpers\User
+  createdAt:
+    type: datetime
+  FK_Usr_updatedBy:
+    type: entity
+    entityClass: test\orm\helpers\User
+    lazy: false
+    nullable: true
+  updatedAt:
+    type: datetime
+    nullable: true
+  name:
+    type: varchar
+  value:
+    type: varchar
+    nullable: true
+  FK_Pro_product:
+    type: entity
+    entityClass: test\orm\helpers\Product
+foreignKeys:
+  -
+    columnName: 'FK_Pro_product'
+    referencedColumnName: 'id'
+    updateRule: 'CASCADE'
+    deleteRule: 'CASCADE'
+

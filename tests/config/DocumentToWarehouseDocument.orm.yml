@@ -1,0 +1,13 @@
+entity: test\orm\helpers\DocumentToWarehouseDocument
+repository: expresscore\orm\Repository
+fields:
+  id:
+    type: int
+    id: true
+    extra: auto_increment
+  FK_Doc_document:
+    type: entity
+    entityClass: test\orm\helpers\Document
+  FK_WaD_warehouseDocument:
+    type: entity
+    entityClass: test\orm\helpers\WarehouseDocument

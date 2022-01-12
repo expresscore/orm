@@ -1,0 +1,12 @@
+/.phpunit.result.cache
+tests/.phpunit.result.cache
+/composer.phar
+/composer
+/composer.lock
+/nbproject/**
+/.idea/**
+/.idea/workspace.xml
+/cache/
+/tests/migrations/
+/vendor/
+/todo.txt

@@ -1,0 +1,40 @@
+entity: test\orm\helpers\Price
+repository: expresscore\orm\Repository
+fields:
+  id:
+    type: int
+    id: true
+    extra: auto_increment
+  FK_Usr_createdBy:
+    type: entity
+    entityClass: test\orm\helpers\User
+  createdAt:
+    type: datetime
+  FK_Usr_updatedBy:
+    type: entity
+    entityClass: test\orm\helpers\User
+    lazy: false
+    nullable: true
+  updatedAt:
+    type: datetime
+    nullable: true
+  name:
+    type: varchar
+  value:
+    type: decimal
+    precision: 10
+    scale: 2
+    nullable: true
+  FK_Pro_product:
+    type: entity
+    entityClass: test\orm\helpers\Product
+foreignKeys:
+  -
+    columnName: 'FK_Pro_product'
+    referencedColumnName: 'id'
+    updateRule: 'CASCADE'
+    deleteRule: 'CASCADE'
+
+lifecycle:
+#  postLoad: test\orm\helpers\ProductEventService::postLoadEventProductFeature
+#  postCreate: test\orm\helpers\ProductEventService::postCreateEventProductFeature

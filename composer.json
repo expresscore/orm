@@ -1,0 +1,36 @@
+{
+	"name": "expresscore/orm",
+	"license": "MIT",
+	"description": "",
+	"require": {
+		"php": ">=8.1",
+		"phpunit/phpunit": "9.5.*",
+		"expresscore/cache": "1.0.*",
+		"nikic/php-parser": "4.13.*",
+		"symfony/yaml": "5.3.*",
+		"ext-pdo": "*"
+	},
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "git@github.com:expresscore/cache.git"
+		}
+	],
+	"keywords": ["library", "orm", "db", "database"],
+	"homepage": "https://devsprint.pl",
+	"authors": [
+		{
+			"name": "Marcin Stodulski",
+			"homepage": "https://devsprint.pl",
+			"role": "Developer"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"expresscore\\orm\\": "src",
+			"test\\orm\\helpers\\": "tests/helpers"
+
+		}
+	},
+	"bin": ["bin/orm"]
+}

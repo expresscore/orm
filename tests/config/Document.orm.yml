@@ -1,0 +1,24 @@
+entity: test\orm\helpers\Document
+repository: expresscore\orm\Repository
+fields:
+  id:
+    type: int
+    id: true
+    extra: auto_increment
+  name:
+    type: varchar
+  FK_Usr_createdBy:
+    type: entity
+    entityClass: test\orm\helpers\User
+  createdAt:
+    type: datetime
+  positions:
+    type: collection
+    entityClass: test\orm\helpers\DocumentPosition
+    joiningField: FK_Doc_document
+  warehouseDocuments:
+    type: collection
+    entityClass: test\orm\helpers\WarehouseDocument
+    joiningField: FK_Doc_document
+    relatedObjectField: FK_WaD_warehouseDocument
+    joiningClass: test\orm\helpers\DocumentToWarehouseDocument

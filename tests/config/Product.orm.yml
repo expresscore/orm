@@ -1,0 +1,70 @@
+entity: test\orm\helpers\Product
+repository: expresscore\orm\Repository
+fields:
+  id:
+    type: int
+    id: true
+    extra: auto_increment
+  FK_Usr_createdBy:
+    type: entity
+    entityClass: test\orm\helpers\User
+  createdAt:
+    type: datetime
+  FK_Usr_updatedBy:
+    type: entity
+    entityClass: test\orm\helpers\User
+    lazy: false
+    nullable: true
+  updatedAt:
+    type: datetime
+    nullable: true
+  sortOrder:
+    type: int
+    nullable: true
+  creatorBrowser:
+    type: varchar
+    nullable: true
+  name:
+    type: varchar
+  archived:
+    type: boolean
+    defaultValue: false
+  weight:
+    type: double
+    precision: 10
+    scale: 2
+    nullable: true
+  features:
+    type: collection
+    entityClass: test\orm\helpers\Feature
+    joiningField: FK_Pro_product
+  prices:
+    type: collection
+    entityClass: test\orm\helpers\Price
+    joiningField: FK_Pro_product
+    lazy: false
+  entityOne:
+    type: entity
+    entityClass: test\orm\helpers\EntityOne
+  entityTwo:
+    type: entity
+    entityClass: test\orm\helpers\EntityTwo
+    nullable: true
+  date:
+    type: date
+    nullable: true
+tableIndexes:
+  -
+    fields:
+      - sortOrder
+foreignKeys:
+  -
+    columnName: 'entityOne'
+    referencedColumnName: 'id'
+lifecycle:
+  preRemove: test\orm\helpers\ProductEventService::preRemoveEvent
+  postRemove: test\orm\helpers\ProductEventService::postRemoveEvent
+  preUpdate: test\orm\helpers\ProductEventService::preUpdateEvent
+  postUpdate: test\orm\helpers\ProductEventService::postUpdateEvent
+  postLoad: test\orm\helpers\ProductEventService::postLoadEvent
+  postCreate: test\orm\helpers\ProductEventService::postCreateEvent
