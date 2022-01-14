@@ -479,12 +479,17 @@ class EntityManager
                     $object = null;
                 }
 
-                if (is_object($object) && (get_class($object) == Collection::class)) {
+                if ((is_object($object) && (get_class($object) == Collection::class)) || is_array($object)) {
 
                     $allCollectionObjectsIds = [];
                     $allCollectionObjectsCollection = new Collection($classConfiguration['fields'][$fieldName]['entityClass']);
 
-                    $collectionElementConfiguration = $this->loadClassConfiguration($object->getCollectionClass());
+                    //if (is_array($object)) {
+                        $collectionElementConfiguration = $this->loadClassConfiguration($classConfiguration['fields'][$fieldName]['entityClass']);
+                    //} else {
+                        //$collectionElementConfiguration = $this->loadClassConfiguration($object->getCollectionClass());
+                    //}
+
                     $idFieldCollectionElement = ObjectMapper::getIdFieldName($collectionElementConfiguration);
 
                     if (isset($fieldData['relatedObjectField']) || isset($fieldData['joiningClass'])) {

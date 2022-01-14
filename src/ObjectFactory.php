@@ -97,7 +97,7 @@ class ObjectFactory {
         array_unshift($namespace[0]->stmts, $use);
     }
 
-    private static function addUses(array $namespace, array $oldUses) : array
+    private static function addUses(array $namespace, array $oldUses, string $originalClassWithoutNamespace) : array
     {
         $addedClasses = [];
 
@@ -105,8 +105,11 @@ class ObjectFactory {
             if (($className !== LazyCollection::class) && ($className !== LazyEntity::class)) {
                 $addedClasses[$className] = $className;
                 $useUse = new UseUse(new Name($className));
-                $use = new Use_([$useUse]);
-                array_unshift($namespace[0]->stmts, $use);
+
+                if ($originalClassWithoutNamespace !== end($useUse->name->parts)) {
+                    $use = new Use_([$useUse]);
+                    array_unshift($namespace[0]->stmts, $use);
+                }
             }
         }
 
@@ -366,7 +369,7 @@ class ObjectFactory {
         return new $proxyClassName();
     }
 
-    private static function createProxyClass(string $objectClass, EntityManager $entityManager) : array
+    private static function getClassConfiguration(string $objectClass, EntityManager $entityManager) : array
     {
         $objectClassArray = explode('\\', $objectClass);
         $newProxyDirForFile = self::getNewNamespace($objectClass);
@@ -383,10 +386,70 @@ class ObjectFactory {
             mkdir($ormProxyDir, 0700, true);
         }
 
-        $classConfiguration = $entityManager->loadClassConfiguration($objectClass);
+        return [$className, $originalProxyClassName, $entityManager->loadClassConfiguration($objectClass)];
+    }
+
+    private static function getClassesToAnalyze(string $objectClass, EntityManager $entityManager, &$classesToAnalyze)
+    {
+        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+
+        $traverser = new NodeTraverser();
+        $traverser->addVisitor(new NodeVisitor());
+
+        $reflection = new ReflectionClass($objectClass);
+
+        $classBody = file_get_contents($reflection->getFileName());
+        $nodes = $parser->parse($classBody);
+
+        $nodeFinder = new NodeFinder();
+        $uses = $nodeFinder->findInstanceOf($nodes, Use_::class);
+
+        $usesClasses = [];
+        foreach ($uses as $use) {
+            $usesClassesRow['className'] = implode('\\', $use->uses[0]->name->parts);
+            if (isset($use->uses[0]->alias->name)) {
+                $usesClassesRow['alias'] = $use->uses[0]->alias->name;
+                $usesClasses[$usesClassesRow['alias']] = $usesClassesRow;
+            } else {
+                $usesClassesRow['alias'] = null;
+                $usesClasses[end($use->uses[0]->name->parts)] = $usesClassesRow;
+                $usesClasses[$usesClassesRow['className']] = $usesClassesRow;
+            }
+        }
+
+        $classes = $nodeFinder->findInstanceOf($nodes, Class_::class);
+        $extendsClasses = [];
+        foreach ($classes as $class) {
+            if (isset($class->extends)) {
+                $extendsClasses[end($class->extends->parts)] = implode('\\', $class->extends->parts);
+            }
+        }
+
+        $newClasses = [];
+        foreach ($extendsClasses as $className) {
+            if (isset($usesClasses[$className])) {
+                $classesToAnalyze[] = $usesClasses[$className]['className'];
+                $newClasses[] = $usesClasses[$className]['className'];
+            } else {
+                $classesToAnalyze[] = $className;
+                $newClasses[] = $className;
+            }
+        }
+
+        foreach ($newClasses as $classToAnalyze) {
+            self::getClassesToAnalyze($classToAnalyze, $entityManager, $classesToAnalyze);
+        }
+    }
+
+    private static function createProxyClass(string $objectClass, EntityManager $entityManager) : array
+    {
+        [$className, $originalProxyClassName, $classConfiguration] = self::getClassConfiguration($objectClass, $entityManager);
+
         $originalFileTime = filemtime($classConfiguration['filePath']);
         $configFileTime = filemtime($classConfiguration['configFilePath']);
 
+        $newProxyDirForFile = self::getNewNamespace($objectClass);
+        $ormProxyDir = getcwd() . '/cache/' . implode('/', $newProxyDirForFile);
         $proxyFileName = $ormProxyDir . '/' . $className . '.php';
         if (file_exists($proxyFileName)) {
             $proxyFileTime = filemtime($proxyFileName);
@@ -407,14 +470,27 @@ class ObjectFactory {
 
         $nodeFinder = new NodeFinder();
         $methods = $nodeFinder->findInstanceOf($nodes, ClassMethod::class);
+        $usesArray = $nodeFinder->findInstanceOf($nodes, Use_::class);
+
+        $classes = [];
+        self::getClassesToAnalyze($objectClass, $entityManager, $classes);
+
+        foreach ($classes as $classToGetMethods) {
+            $reflection = new ReflectionClass($classToGetMethods);
+            $classToGetMethodsBody = file_get_contents($reflection->getFileName());
+            $nodesToGetMethods = $parser->parse($classToGetMethodsBody);
+            $methodsFromExtendedClass = $nodeFinder->findInstanceOf($nodesToGetMethods, ClassMethod::class);
+            $methods = array_merge($methods, $methodsFromExtendedClass);
+
+            $usesFromExtendedClass = $nodeFinder->findInstanceOf($nodesToGetMethods, Use_::class);
+            $usesArray = array_merge($usesArray, $usesFromExtendedClass);
+        }
 
         $oldMethods = [];
         /** @var ClassMethod $method */
         foreach ($methods as $method) {
             $oldMethods[$method->name->name] = $method;
         }
-
-        $usesArray = $nodeFinder->findInstanceOf($nodes, Use_::class);
 
         $oldUses = [];
         /** @var Use_ $uses */
@@ -435,8 +511,10 @@ class ObjectFactory {
 
         self::modifyNamespace($objectClass, $namespace);
         self::addExtendingClassUse($objectClass, $namespace);
-        $addedClasses = self::addUses($namespace, $oldUses);
+        $objectClassExploded = explode('\\', $objectClass);
+        $addedClasses = self::addUses($namespace, $oldUses, end($objectClassExploded));
         self::modifyClassExtends($objectClass, $class);
+
         self::addOrmInitializedProperty($class);
         $returnTypeObjectClasses = self::createGetters($fieldsToOverwrite, $class, $oldMethods, $currentNamespace);
         self::addReturnTypeUses($namespace, $returnTypeObjectClasses, $addedClasses);
