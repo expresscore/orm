@@ -197,7 +197,7 @@ class ObjectFactory {
                                 $returnTypeObjectClasses[md5($className)] = $className;
                             }
                         }
-                    } elseif ($oldMethod->getReturnType()->name != 'array') {
+                    } elseif (($oldMethod->getReturnType()->name != 'array') && ($oldMethod->getReturnType()->name != 'mixed')) {
                         throw new Exception('Unknown return type on field ' . $fieldToOverwrite);
                     }
                 }

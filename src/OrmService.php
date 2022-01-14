@@ -10,6 +10,8 @@
 
 namespace expresscore\orm;
 
+use app\MigrationFactories\InvoicePositionMigrationFactory;
+use app\MigrationFactories\WarehouseDocumentToInvoiceMigrationFactory;
 use Exception;
 use Symfony\Component\Yaml\Yaml;
 
@@ -292,9 +294,9 @@ class OrmService
                 $object = $factory->createObject($record);
                 $object->fromMigration = true;
                 self::$entityManager->persist($object);
+                self::$entityManager->flush();
             }
 
-            self::$entityManager->flush();
         }
 
         self::$entityManager->turnOnCheckForeignKeys();

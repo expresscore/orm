@@ -461,7 +461,7 @@ class EntityManager
 
             $classProperties = [];
             ObjectMapper::getClassProperties(get_class($entityToSave), $classProperties, array_merge(array_keys($entityOrCollectionFields), [$idFieldParent]));
-            /** @var ReflectionProperty $idParentReflectionProperty */
+
             $idParentReflectionProperty = $classProperties[$idFieldParent];
             unset($classProperties[$idFieldParent]);
             $visibilityLevel = ObjectMapper::setFieldAccessible($idParentReflectionProperty);
@@ -472,6 +472,8 @@ class EntityManager
 
                 /** @var ReflectionProperty $property */
                 $property = $classProperties[$fieldName];
+
+                $object = null;
                 $visibilityLevel = ObjectMapper::setFieldAccessible($property);
                 if ($property->isInitialized($entityToSave)) {
                     $object = $property->getValue($entityToSave);
@@ -479,16 +481,15 @@ class EntityManager
                     $object = null;
                 }
 
+                if (($object !== null) && ((isset($object->___orm_initialized) && $object->___orm_initialized == false))) {
+                    continue;
+                }
+
                 if ((is_object($object) && (get_class($object) == Collection::class)) || is_array($object)) {
 
                     $allCollectionObjectsIds = [];
                     $allCollectionObjectsCollection = new Collection($classConfiguration['fields'][$fieldName]['entityClass']);
-
-                    //if (is_array($object)) {
-                        $collectionElementConfiguration = $this->loadClassConfiguration($classConfiguration['fields'][$fieldName]['entityClass']);
-                    //} else {
-                        //$collectionElementConfiguration = $this->loadClassConfiguration($object->getCollectionClass());
-                    //}
+                    $collectionElementConfiguration = $this->loadClassConfiguration($classConfiguration['fields'][$fieldName]['entityClass']);
 
                     $idFieldCollectionElement = ObjectMapper::getIdFieldName($collectionElementConfiguration);
 
@@ -502,10 +503,7 @@ class EntityManager
                             $idFieldCollectionElement = ObjectMapper::getIdFieldName($collectionElementConfiguration);
                         }
 
-                        //pobieranie wszystkich pozycji do kasowania, potem to obsłużyć
-
                         if ($parentId !== null) {
-
                             $allCollectionObjects = $this->findBy(
                                 $classConfiguration['fields'][$fieldName]['joiningClass'],
                                 [
@@ -562,7 +560,6 @@ class EntityManager
                             $this->priorityArray[spl_object_id($joiningEntity)] = $depth;
                         }
                     } else {
-
                         if ($parentId !== null) {
                             $allCollectionObjects = $this->findBy(
                                 $classConfiguration['fields'][$fieldName]['entityClass'],
