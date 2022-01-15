@@ -94,10 +94,10 @@ class Collection implements Iterator {
             ObjectMapper::getClassProperties(get_class($collectionElement), $classProperties, [$fieldName]);
             /** @var ReflectionProperty $property */
             $property = $classProperties[$fieldName];
-            $visibilityLevel = ObjectMapper::setFieldAccessible($property);
+            //$visibilityLevel = ObjectMapper::setFieldAccessible($property);
 
             $value = $property->getValue($collectionElement);
-            ObjectMapper::setOriginalAccessibility($property, $visibilityLevel);
+            //ObjectMapper::setOriginalAccessibility($property, $visibilityLevel);
 
             if ($value === $expectedValue) {
                 return $collectionElement;
@@ -114,10 +114,10 @@ class Collection implements Iterator {
             ObjectMapper::getClassProperties(get_class($collectionElement), $classProperties, [$fieldName]);
             /** @var ReflectionProperty $property */
             $property = $classProperties[$fieldName];
-            $visibilityLevel = ObjectMapper::setFieldAccessible($property);
+            //$visibilityLevel = ObjectMapper::setFieldAccessible($property);
 
             $value = $property->getValue($collectionElement);
-            ObjectMapper::setOriginalAccessibility($property, $visibilityLevel);
+            //ObjectMapper::setOriginalAccessibility($property, $visibilityLevel);
 
             if ($value === $expectedValue) {
                 return $index;

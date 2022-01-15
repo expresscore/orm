@@ -4,6 +4,7 @@ namespace test\orm\helpers;
 use DateTime;
 use expresscore\orm\Collection;
 use expresscore\orm\LazyCollection;
+use JetBrains\PhpStorm\Pure;
 
 class Document
 {
@@ -14,7 +15,7 @@ class Document
     private Collection|LazyCollection $positions;
     private Collection|LazyCollection $warehouseDocuments;
 
-    public function __construct()
+    #[Pure] public function __construct()
     {
         $this->positions = new Collection(DocumentPosition::class);
         $this->warehouseDocuments = new Collection(WarehouseDocument::class);

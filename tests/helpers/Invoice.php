@@ -3,6 +3,7 @@ namespace test\orm\helpers;
 
 use expresscore\orm\Collection;
 use expresscore\orm\LazyCollection;
+use JetBrains\PhpStorm\Pure;
 
 class Invoice
 {
@@ -10,7 +11,7 @@ class Invoice
     public ?string $number = null;
     private Collection|LazyCollection $warehouseDocuments;
 
-    public function __construct()
+    #[Pure] public function __construct()
     {
         $this->warehouseDocuments = new Collection(WarehouseDocument::class);
     }

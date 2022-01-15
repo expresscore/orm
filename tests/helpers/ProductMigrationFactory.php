@@ -6,7 +6,7 @@ use expresscore\orm\MigrationFactoryAbstract;
 
 class ProductMigrationFactory extends MigrationFactoryAbstract
 {
-    #[Pure] public function createObject(array $yamlRecord) : Product
+    public function createObject(array $yamlRecord) : Product
     {
         $userRepository = $this->entityManager->createRepository(User::class);
         $entityOneRepository = $this->entityManager->createRepository(EntityOne::class);

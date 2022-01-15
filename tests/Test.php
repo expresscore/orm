@@ -71,10 +71,10 @@ class Test extends TestCase
         $featuresReflectionProperty = $reflectionObjectFields['features'];
         $pricesReflectionProperty = $reflectionObjectFields['prices'];
 
-        ObjectMapper::setFieldAccessible($fkUsrCreatedByReflectionProperty);
-        ObjectMapper::setFieldAccessible($fkUsrUpdatedByReflectionProperty);
-        ObjectMapper::setFieldAccessible($featuresReflectionProperty);
-        ObjectMapper::setFieldAccessible($pricesReflectionProperty);
+        //ObjectMapper::setFieldAccessible($fkUsrCreatedByReflectionProperty);
+        //ObjectMapper::setFieldAccessible($fkUsrUpdatedByReflectionProperty);
+        //ObjectMapper::setFieldAccessible($featuresReflectionProperty);
+        //ObjectMapper::setFieldAccessible($pricesReflectionProperty);
 
         $fkUsrCreatedByValue = $fkUsrCreatedByReflectionProperty->getValue($product);
         $fkUsrUpdatedByValue = $fkUsrUpdatedByReflectionProperty->getValue($product);
@@ -1816,6 +1816,56 @@ class Test extends TestCase
         foreach ($document->getPositions() as $documentPosition) {
             $this->assertContains($documentPosition->getName(), $documentPositionNames);
         }
+    }
+
+    public function testDocumentWith_OneToOne_OneToMany_ManyToMany_AllNew()
+    {
+        $user = new User();
+        $user->setName('New User 111');
+
+        $warehouseDocumentNumbers = ['WADOTEST-123', 'WADOTEST-214', 'WADOTEST-315', 'WADOTEST-416'];
+        $documentPositionNames = ['Position 1', 'Position 2', 'Position 3'];
+
+        $document = new Document();
+        $document->setName('Document 12233');
+        $document->setCreatedAt(new DateTime());
+        $document->setFK_Usr_createdBy($user);
+
+        foreach ($warehouseDocumentNumbers as $documentNumber) {
+            $warehouseDocument = new WarehouseDocument();
+            $warehouseDocument->setNumber($documentNumber);
+
+            $document->getWarehouseDocuments()->add($warehouseDocument);
+        }
+
+        foreach ($documentPositionNames as $positionName) {
+            $documentPosition = new DocumentPosition();
+            $documentPosition->setName($positionName);
+            $document->addPosition($documentPosition);
+        }
+
+        $this->entityManager->persist($document);
+        $this->entityManager->flush();
+
+        $documentRepository = $this->entityManager->createRepository(Document::class);
+        /** @var Document $document */
+        $document = $documentRepository->findOneBy(['name' => 'Document 12233']);
+
+        $this->assertEquals(4, $document->getWarehouseDocuments()->getRecordsCount());
+        $this->assertEquals(3, $document->getPositions()->getRecordsCount());
+
+        /** @var WarehouseDocument $warehouseDocument */
+        foreach ($document->getWarehouseDocuments() as $warehouseDocument) {
+            $this->assertContains($warehouseDocument->getNumber(), $warehouseDocumentNumbers);
+        }
+
+        /** @var DocumentPosition $documentPosition */
+        foreach ($document->getPositions() as $documentPosition) {
+            $this->assertContains($documentPosition->getName(), $documentPositionNames);
+        }
+
+        $this->assertEquals('New User 111', $document->getFK_Usr_createdBy()->getName());
+        $this->assertEquals('Document 12233', $document->getName());
     }
 
     public function testRawQuery()

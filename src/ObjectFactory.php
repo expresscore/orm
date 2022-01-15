@@ -1,4 +1,5 @@
-<?php
+<?php /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+
 /**
  * This file is part of the ExpressCore package.
  *
@@ -253,20 +254,21 @@ class ObjectFactory {
                         )
                     );
 
-                    $visibilityLevel = new Expression(
-                        new Assign(
-                            new Variable('visibilityLevel'),
-                            new StaticCall(
-                                new Name('ObjectMapper'),
-                                new Identifier('setFieldAccessible'),
-                                [
-                                    new Arg(
-                                        new Variable('reflectionProperty')
-                                    )
-                                ]
-                            )
-                        )
-                    );
+                    //uncoment for php < 8.1
+//                    $visibilityLevel = new Expression(
+//                        new Assign(
+//                            new Variable('visibilityLevel'),
+//                            new StaticCall(
+//                                new Name('ObjectMapper'),
+//                                new Identifier('setFieldAccessible'),
+//                                [
+//                                    new Arg(
+//                                        new Variable('reflectionProperty')
+//                                    )
+//                                ]
+//                            )
+//                        )
+//                    );
 
                     $features = new Expression(
                         new Assign(
@@ -300,16 +302,17 @@ class ObjectFactory {
                         )
                     );
 
-                    $ifStmt2 = new Expression(
-                        new StaticCall(
-                            new Name('ObjectMapper'),
-                            new Identifier('setOriginalAccessibility'),
-                            [
-                                new Arg(new Variable('reflectionProperty')),
-                                new Arg(new Variable('visibilityLevel'))
-                            ]
-                        )
-                    );
+                    //uncoment for php < 8.1
+//                    $ifStmt2 = new Expression(
+//                        new StaticCall(
+//                            new Name('ObjectMapper'),
+//                            new Identifier('setOriginalAccessibility'),
+//                            [
+//                                new Arg(new Variable('reflectionProperty')),
+//                                new Arg(new Variable('visibilityLevel'))
+//                            ]
+//                        )
+//                    );
 
                     $ifStmt3 = new Return_(new Variable('collection'));
 
@@ -322,14 +325,16 @@ class ObjectFactory {
                     );
 
                     $ifCondition->stmts[] = $ifStmt1;
-                    $ifCondition->stmts[] = $ifStmt2;
+                    //uncoment for php < 8.1
+                    //$ifCondition->stmts[] = $ifStmt2;
                     $ifCondition->stmts[] = $ifStmt3;
                     $ifCondition->else = $elseCond;
 
                     $getter->stmts[] = $createArray;
                     $getter->stmts[] = $getClassProperties;
                     $getter->stmts[] = $reflectionProperty;
-                    $getter->stmts[] = $visibilityLevel;
+                    //uncoment for php < 8.1
+                    //$getter->stmts[] = $visibilityLevel;
                     $getter->stmts[] = $features;
                     $getter->stmts[] = $ifCondition;
 

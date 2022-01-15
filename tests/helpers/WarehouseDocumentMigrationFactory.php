@@ -6,7 +6,7 @@ use expresscore\orm\MigrationFactoryAbstract;
 
 class WarehouseDocumentMigrationFactory extends MigrationFactoryAbstract
 {
-    #[Pure] public function createObject(array $yamlRecord) : WarehouseDocument
+    public function createObject(array $yamlRecord) : WarehouseDocument
     {
         $warehouseDocument = new WarehouseDocument();
         $warehouseDocument->setId($yamlRecord['id']);

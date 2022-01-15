@@ -6,7 +6,7 @@ use expresscore\orm\MigrationFactoryAbstract;
 
 class EntityZeroMigrationFactory extends MigrationFactoryAbstract
 {
-    #[Pure] public function createObject(array $yamlRecord) : EntityZero
+    public function createObject(array $yamlRecord) : EntityZero
     {
         $entityTwo = new EntityZero();
         $entityTwo->setId($yamlRecord['id']);

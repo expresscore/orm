@@ -10,8 +10,6 @@
 
 namespace expresscore\orm;
 
-use app\MigrationFactories\InvoicePositionMigrationFactory;
-use app\MigrationFactories\WarehouseDocumentToInvoiceMigrationFactory;
 use Exception;
 use Symfony\Component\Yaml\Yaml;
 

@@ -51,9 +51,9 @@ class LazyCollection {
                 throw new Exception('Field "relatedObjectField" is required when field "joiningClass" is defined in entity configuration (orm file)');
             } else {
                 $collection = new Collection($this->class);
-                $visibilityLevel = ObjectMapper::setFieldAccessible($idProperty);
+                //$visibilityLevel = ObjectMapper::setFieldAccessible($idProperty);
                 $parentId = $idProperty->getValue($this->parent);
-                ObjectMapper::setOriginalAccessibility($idProperty, $visibilityLevel);
+                //ObjectMapper::setOriginalAccessibility($idProperty, $visibilityLevel);
 
                 $elements = $entityManager->findForParent($fieldData['joiningClass'], [$fieldData['joiningField'] => $parentId], $fieldData['joiningField'], $this->parent);
 
@@ -62,25 +62,25 @@ class LazyCollection {
                     $collection->add($element->$getter());
                 }
 
-                $visibilityLevel = ObjectMapper::setFieldAccessible($fieldProperty);
+                //$visibilityLevel = ObjectMapper::setFieldAccessible($fieldProperty);
                 $fieldProperty->setValue($this->parent, $collection);
 
-                ObjectMapper::setOriginalAccessibility($fieldProperty, $visibilityLevel);
+                //ObjectMapper::setOriginalAccessibility($fieldProperty, $visibilityLevel);
             }
         } else {
-            $visibilityLevel = ObjectMapper::setFieldAccessible($idProperty);
+            //$visibilityLevel = ObjectMapper::setFieldAccessible($idProperty);
             $parentId = $idProperty->getValue($this->parent);
-            ObjectMapper::setOriginalAccessibility($idProperty, $visibilityLevel);
+            //ObjectMapper::setOriginalAccessibility($idProperty, $visibilityLevel);
 
             $elements = $entityManager->findForParent($this->class, [$this->joiningField => $parentId], $this->joiningField, $this->parent);
             $collection = new Collection($this->class);
             $collection->setCollectionArray($elements);
             $collection->setRecordsCount(count($elements));
 
-            $visibilityLevel = ObjectMapper::setFieldAccessible($fieldProperty);
+            //$visibilityLevel = ObjectMapper::setFieldAccessible($fieldProperty);
             $fieldProperty->setValue($this->parent, $collection);
 
-            ObjectMapper::setOriginalAccessibility($fieldProperty, $visibilityLevel);
+            //ObjectMapper::setOriginalAccessibility($fieldProperty, $visibilityLevel);
         }
 
         return $collection;

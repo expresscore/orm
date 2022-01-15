@@ -12,7 +12,6 @@ namespace expresscore\orm;
 
 use DateTime;
 use Exception;
-use JetBrains\PhpStorm\Pure;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -27,9 +26,9 @@ class ObjectMapper {
         if ($idField !== null) {
             $reflectionClass = new ReflectionClass($mockObjectClass);
             $reflectionObjectIdField = $reflectionClass->getProperty($idField);
-            $visibilityLevel = self::setFieldAccessible($reflectionObjectIdField);
+            //$visibilityLevel = self::setFieldAccessible($reflectionObjectIdField);
             $reflectionObjectIdField->setValue($mockObject, $entityId);
-            self::setOriginalAccessibility($reflectionObjectIdField, $visibilityLevel);
+            //self::setOriginalAccessibility($reflectionObjectIdField, $visibilityLevel);
 
             return $mockObject;
 
@@ -85,7 +84,7 @@ class ObjectMapper {
 
                     $isLazy = !isset($entityConfiguration['fields'][$reflectionObjectField->getName()]['lazy']) || $entityConfiguration['fields'][$reflectionObjectField->getName()]['lazy'];
 
-                    $visibilityLevel = self::setFieldAccessible($reflectionObjectField);
+                    //$visibilityLevel = self::setFieldAccessible($reflectionObjectField);
                     $entityClassName = $entityConfiguration['fields'][$reflectionObjectField->getName()]['entityClass'];
                     $entityId = $dbObject[$reflectionObjectField->getName()];
 
@@ -100,13 +99,13 @@ class ObjectMapper {
                     }
 
                 } else {
-                    $visibilityLevel = self::setFieldAccessible($reflectionObjectField);
+                    //$visibilityLevel = self::setFieldAccessible($reflectionObjectField);
                     $preparedValue = $dbObject[$reflectionObjectField->getName()];
                     $preparedValue = self::translatePreparedValueForMap($entityConfiguration, $reflectionObjectField, $preparedValue);
                     $reflectionObjectField->setValue($entity, $preparedValue);
                 }
 
-                self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
+                //self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
 
             } else {
                 if (isset($entityConfiguration['fields'][$reflectionObjectField->getName()])) {
@@ -114,7 +113,7 @@ class ObjectMapper {
 
                         $isLazy = !isset($entityConfiguration['fields'][$reflectionObjectField->getName()]['lazy']) || $entityConfiguration['fields'][$reflectionObjectField->getName()]['lazy'];
 
-                        $visibilityLevel = self::setFieldAccessible($reflectionObjectField);
+                        //$visibilityLevel = self::setFieldAccessible($reflectionObjectField);
                         $entityClassName = $entityConfiguration['fields'][$reflectionObjectField->getName()]['entityClass'];
 
                         $joiningField = $entityConfiguration['fields'][$reflectionObjectField->getName()]['joiningField'];
@@ -125,7 +124,7 @@ class ObjectMapper {
                             $reflectionObjectField->setValue($entity, $lazyCollection->getCollection());
                         }
 
-                        self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
+                        //self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
                     }
                 }
             }
@@ -163,7 +162,7 @@ class ObjectMapper {
                 throw new Exception('Field "' . $fieldName . '" exists in orm file, but not exist in ' . get_class($entity) . ' class.');
             }
 
-            $visibilityLevel = self::setFieldAccessible($reflectionObjectField);
+            //$visibilityLevel = self::setFieldAccessible($reflectionObjectField);
 
             if ($fieldProperties['type'] == 'entity') {
                 $fieldObjectConfiguration = $entityManager->loadClassConfiguration($fieldProperties['entityClass']);
@@ -177,7 +176,7 @@ class ObjectMapper {
                     }
 
                     if ($preparedValue !== null) {
-                        self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
+                        //self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
 
                         $preparedValueClassProperties = [];
                         self::getClassProperties(get_class($preparedValue), $preparedValueClassProperties);
@@ -191,9 +190,9 @@ class ObjectMapper {
                             }
                         }
 
-                        $visibilityLevel = self::setFieldAccessible($reflectionObjectIdField);
+                        //$visibilityLevel = self::setFieldAccessible($reflectionObjectIdField);
                         $objectId = $reflectionObjectIdField->getValue($preparedValue);
-                        self::setOriginalAccessibility($reflectionObjectIdField, $visibilityLevel);
+                        //self::setOriginalAccessibility($reflectionObjectIdField, $visibilityLevel);
 
                         $entitiesToSave[get_class($entity)][spl_object_id($entity)]['data'][$fieldName] = $objectId;
                     } else {
@@ -219,37 +218,39 @@ class ObjectMapper {
                     $entitiesToSave[get_class($entity)][spl_object_id($entity)]['data'][$fieldName] = $preparedValue;
                 }
 
-                self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
+                //self::setOriginalAccessibility($reflectionObjectField, $visibilityLevel);
             }
         }
 
         return $entitiesToSave;
     }
 
-    #[Pure] public static function setFieldAccessible(ReflectionProperty $reflectionObjectField) : string
-    {
-        $visibilityLevel = 'public';
-        if (!$reflectionObjectField->isPublic()) {
-            if ($reflectionObjectField->isPrivate()) $visibilityLevel = 'private';
-            if ($reflectionObjectField->isProtected()) $visibilityLevel = 'protected';
-            $reflectionObjectField->setAccessible(true);
-        }
+    //method for php < 8.1, uncomment body and calls
+//    #[Pure] public static function setFieldAccessible(ReflectionProperty $reflectionObjectField) : string
+//    {
+//        $visibilityLevel = 'public';
+//        if (!$reflectionObjectField->isPublic()) {
+//            if ($reflectionObjectField->isPrivate()) $visibilityLevel = 'private';
+//            if ($reflectionObjectField->isProtected()) $visibilityLevel = 'protected';
+//            $reflectionObjectField->setAccessible(true);
+//        }
+//
+//        return $visibilityLevel;
+//    }
 
-        return $visibilityLevel;
-    }
-
-    #[Pure] public static function setOriginalAccessibility(ReflectionProperty $reflectionObjectField, string $visibilityLevel) : void
-    {
-        switch ($visibilityLevel) {
-            case 'public':
-                $reflectionObjectField->setAccessible(true);
-                break;
-            case 'private':
-            case 'protected':
-                $reflectionObjectField->setAccessible(false);
-                break;
-        }
-    }
+    //method for php < 8.1, uncomment body and calls
+//    #[Pure] public static function setOriginalAccessibility(ReflectionProperty $reflectionObjectField, string $visibilityLevel) : void
+//    {
+//        switch ($visibilityLevel) {
+//            case 'public':
+//                $reflectionObjectField->setAccessible(true);
+//                break;
+//            case 'private':
+//            case 'protected':
+//                $reflectionObjectField->setAccessible(false);
+//                break;
+//        }
+//    }
 
     private static function translatePreparedValueForMap(array $entityConfiguration, $reflectionObjectField, mixed $preparedValue)
     {

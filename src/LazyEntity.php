@@ -20,22 +20,22 @@ class LazyEntity {
 
         $classProperties = [];
         $fieldClassProperty = null;
-        $fieldClassPropertyVisibilityLevel = null;
+        //$fieldClassPropertyVisibilityLevel = null;
 
         ObjectMapper::getClassProperties(get_class($object), $classProperties);
         /** @var ReflectionProperty $classProperty */
         foreach ($classProperties as $fieldClassProperty) {
             if ($fieldClassProperty->name == $fieldName) {
-                $fieldClassPropertyVisibilityLevel = ObjectMapper::setFieldAccessible($fieldClassProperty);
+                //$fieldClassPropertyVisibilityLevel = ObjectMapper::setFieldAccessible($fieldClassProperty);
                 $fieldValue = $fieldClassProperty->getValue($object);
                 break;
             }
         }
 
         if (isset($fieldValue->___orm_initialized) && ($fieldValue->___orm_initialized)) {
-            if (($fieldClassProperty !== null) && ($fieldClassPropertyVisibilityLevel !== null)) {
-                ObjectMapper::setOriginalAccessibility($fieldClassProperty, $fieldClassPropertyVisibilityLevel);
-            }
+//            if (($fieldClassProperty !== null) && ($fieldClassPropertyVisibilityLevel !== null)) {
+//                ObjectMapper::setOriginalAccessibility($fieldClassProperty, $fieldClassPropertyVisibilityLevel);
+//            }
 
             return $fieldValue;
         } else {
@@ -50,7 +50,7 @@ class LazyEntity {
                 /** @var ReflectionProperty $classProperty */
                 foreach ($classProperties as $classProperty) {
                     if ($classProperty->name == $idFieldName) {
-                        $visibilityLevel = ObjectMapper::setFieldAccessible($classProperty);
+                        //$visibilityLevel = ObjectMapper::setFieldAccessible($classProperty);
                         $objectId = $classProperty->getValue($fieldValue);
 
                         if ($objectId === null) {
@@ -62,11 +62,11 @@ class LazyEntity {
                                 $fieldClassProperty->setValue($object, $propertyObject);
                             }
 
-                            if (($fieldClassProperty !== null) && ($fieldClassPropertyVisibilityLevel !== null)) {
-                                ObjectMapper::setOriginalAccessibility($fieldClassProperty, $fieldClassPropertyVisibilityLevel);
-                            }
+//                            if (($fieldClassProperty !== null) && ($fieldClassPropertyVisibilityLevel !== null)) {
+//                                ObjectMapper::setOriginalAccessibility($fieldClassProperty, $fieldClassPropertyVisibilityLevel);
+//                            }
 
-                            ObjectMapper::setOriginalAccessibility($classProperty, $visibilityLevel);
+                            //ObjectMapper::setOriginalAccessibility($classProperty, $visibilityLevel);
 
                             return $propertyObject;
                         }

@@ -52,14 +52,14 @@ class DBConnection
                     ObjectMapper::getClassProperties(get_class($parameter['value']), $classProperties);
 
                     $propertyIdField = $classProperties[$idFieldName];
-                    $visibilityLevel = ObjectMapper::setFieldAccessible($propertyIdField);
+                    //$visibilityLevel = ObjectMapper::setFieldAccessible($propertyIdField);
 
                     if (!$propertyIdField->isInitialized($parameter['value'])) {
                         throw new Exception('The object used as a parameter does not have an id field.');
                     } else {
                         $preparedId = $propertyIdField->getValue($parameter['value']);
                     }
-                    ObjectMapper::setOriginalAccessibility($propertyIdField, $visibilityLevel);
+                    //ObjectMapper::setOriginalAccessibility($propertyIdField, $visibilityLevel);
 
                     $statement->bindValue($parameter['name'], $preparedId, $parameter['type']);
                 }

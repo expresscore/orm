@@ -6,7 +6,7 @@ use expresscore\orm\MigrationFactoryAbstract;
 
 class InvoiceToWarehouseDocumentMigrationFactory extends MigrationFactoryAbstract
 {
-    #[Pure] public function createObject(array $yamlRecord) : InvoiceToWarehouseDocument
+    public function createObject(array $yamlRecord) : InvoiceToWarehouseDocument
     {
         $invoiceRepository = $this->entityManager->createRepository(Invoice::class);
         $warehouseDocumentRepository = $this->entityManager->createRepository(WarehouseDocument::class);
