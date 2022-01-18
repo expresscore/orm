@@ -150,11 +150,11 @@ class ObjectFactory {
 
     private static function modifyClassExtends($objectClass, array $class)
     {
-        if ($class[0]->extends === null) {
+//        if ($class[0]->extends === null) {
             $class[0]->extends = new Name(implode(explode('\\', $objectClass)));
-        } else {
-            $class[0]->extends->parts = [implode(explode('\\', $objectClass))];
-        }
+//        } else {
+//            $class[0]->extends->parts = [implode(explode('\\', $objectClass))];
+//        }
     }
 
     private static function createGetters($fieldsToOverwrite, array $class, array $oldMethods, string $currentNamespace): array
@@ -386,7 +386,13 @@ class ObjectFactory {
             $originalProxyClassName = implode('\\', $newProxyDirForFile) . '\\' . $className;
         }
 
-        $ormProxyDir = getcwd() . '/cache/' . implode('/', $newProxyDirForFile);
+        if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
+            $directoryPrefix = '/../';
+        } else {
+            $directoryPrefix = '/';
+        }
+
+        $ormProxyDir = getcwd() . $directoryPrefix . 'cache/' . implode('/', $newProxyDirForFile);
         if (!file_exists($ormProxyDir)) {
             mkdir($ormProxyDir, 0700, true);
         }
@@ -453,8 +459,14 @@ class ObjectFactory {
         $originalFileTime = filemtime($classConfiguration['filePath']);
         $configFileTime = filemtime($classConfiguration['configFilePath']);
 
+        if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
+            $directoryPrefix = '/../';
+        } else {
+            $directoryPrefix = '/';
+        }
+
         $newProxyDirForFile = self::getNewNamespace($objectClass);
-        $ormProxyDir = getcwd() . '/cache/' . implode('/', $newProxyDirForFile);
+        $ormProxyDir = getcwd() . $directoryPrefix . 'cache/' . implode('/', $newProxyDirForFile);
         $proxyFileName = $ormProxyDir . '/' . $className . '.php';
         if (file_exists($proxyFileName)) {
             $proxyFileTime = filemtime($proxyFileName);
