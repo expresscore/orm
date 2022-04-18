@@ -20,9 +20,9 @@ class DBConnection
 {
     private PDO $connection;
     private DbAdapterInterface $dbAdapter;
-    private EntityManager $entityManager;
+    private ?ConfigurationLoader $configurationLoader;
 
-    public function __construct(DbAdapterInterface $dbAdapter, string $dsn, string $user, string $password = null, EntityManager $entityManager = null)
+    public function __construct(DbAdapterInterface $dbAdapter, string $dsn, string $user, string $password = null, ConfigurationLoader $configurationLoader = null)
     {
         $this->dbAdapter = $dbAdapter;
 
@@ -33,7 +33,7 @@ class DBConnection
         ];
 
         $this->connection = new PDO($dsn, $user, $password, $options);
-        $this->entityManager = $entityManager;
+        $this->configurationLoader = $configurationLoader;
     }
 
     public function bindParameters(string $query, array $parameters = []) : PDOStatement
@@ -46,20 +46,22 @@ class DBConnection
                 if ($parameter['value'] instanceof DateTime) {
                     $statement->bindValue($parameter['name'], $parameter['value']->format('Y-m-d H:i:s'), $parameter['type']);
                 } else {
-                    $fieldObjectConfiguration = $this->entityManager->loadClassConfiguration(get_class($parameter['value']));
-                    $idFieldName = ObjectMapper::getIdFieldName($fieldObjectConfiguration);
+                    if ($this->configurationLoader !== null) {
+                        $fieldObjectConfiguration = $this->configurationLoader->loadClassConfiguration(get_class($parameter['value']));
+                        $idFieldName = ObjectMapper::getIdFieldName($fieldObjectConfiguration);
+                    } else {
+                        $idFieldName = 'id';
+                    }
                     $classProperties = [];
                     ObjectMapper::getClassProperties(get_class($parameter['value']), $classProperties);
 
                     $propertyIdField = $classProperties[$idFieldName];
-                    //$visibilityLevel = ObjectMapper::setFieldAccessible($propertyIdField);
 
                     if (!$propertyIdField->isInitialized($parameter['value'])) {
                         throw new Exception('The object used as a parameter does not have an id field.');
                     } else {
                         $preparedId = $propertyIdField->getValue($parameter['value']);
                     }
-                    //ObjectMapper::setOriginalAccessibility($propertyIdField, $visibilityLevel);
 
                     $statement->bindValue($parameter['name'], $preparedId, $parameter['type']);
                 }

@@ -71,11 +71,6 @@ class Test extends TestCase
         $featuresReflectionProperty = $reflectionObjectFields['features'];
         $pricesReflectionProperty = $reflectionObjectFields['prices'];
 
-        //ObjectMapper::setFieldAccessible($fkUsrCreatedByReflectionProperty);
-        //ObjectMapper::setFieldAccessible($fkUsrUpdatedByReflectionProperty);
-        //ObjectMapper::setFieldAccessible($featuresReflectionProperty);
-        //ObjectMapper::setFieldAccessible($pricesReflectionProperty);
-
         $fkUsrCreatedByValue = $fkUsrCreatedByReflectionProperty->getValue($product);
         $fkUsrUpdatedByValue = $fkUsrUpdatedByReflectionProperty->getValue($product);
         $featuresValue = $featuresReflectionProperty->getValue($product);

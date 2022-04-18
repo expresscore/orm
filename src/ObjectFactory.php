@@ -254,22 +254,6 @@ class ObjectFactory {
                         )
                     );
 
-                    //uncoment for php < 8.1
-//                    $visibilityLevel = new Expression(
-//                        new Assign(
-//                            new Variable('visibilityLevel'),
-//                            new StaticCall(
-//                                new Name('ObjectMapper'),
-//                                new Identifier('setFieldAccessible'),
-//                                [
-//                                    new Arg(
-//                                        new Variable('reflectionProperty')
-//                                    )
-//                                ]
-//                            )
-//                        )
-//                    );
-
                     $features = new Expression(
                         new Assign(
                             new Variable($fieldToOverwrite),
@@ -302,18 +286,6 @@ class ObjectFactory {
                         )
                     );
 
-                    //uncoment for php < 8.1
-//                    $ifStmt2 = new Expression(
-//                        new StaticCall(
-//                            new Name('ObjectMapper'),
-//                            new Identifier('setOriginalAccessibility'),
-//                            [
-//                                new Arg(new Variable('reflectionProperty')),
-//                                new Arg(new Variable('visibilityLevel'))
-//                            ]
-//                        )
-//                    );
-
                     $ifStmt3 = new Return_(new Variable('collection'));
 
                     $elseCond = new Else_(
@@ -325,16 +297,12 @@ class ObjectFactory {
                     );
 
                     $ifCondition->stmts[] = $ifStmt1;
-                    //uncoment for php < 8.1
-                    //$ifCondition->stmts[] = $ifStmt2;
                     $ifCondition->stmts[] = $ifStmt3;
                     $ifCondition->else = $elseCond;
 
                     $getter->stmts[] = $createArray;
                     $getter->stmts[] = $getClassProperties;
                     $getter->stmts[] = $reflectionProperty;
-                    //uncoment for php < 8.1
-                    //$getter->stmts[] = $visibilityLevel;
                     $getter->stmts[] = $features;
                     $getter->stmts[] = $ifCondition;
 
@@ -397,7 +365,7 @@ class ObjectFactory {
             mkdir($ormProxyDir, 0700, true);
         }
 
-        return [$className, $originalProxyClassName, $entityManager->loadClassConfiguration($objectClass)];
+        return [$className, $originalProxyClassName, $entityManager->configurationLoader->loadClassConfiguration($objectClass)];
     }
 
     private static function getClassesToAnalyze(string $objectClass, EntityManager $entityManager, &$classesToAnalyze)
@@ -549,7 +517,7 @@ class ObjectFactory {
         [$proxyFileName, $originalProxyClassName] = self::createProxyClass($objectClass, $entityManager);
         $object = self::createObject($proxyFileName, $originalProxyClassName);
 
-        $entityConfiguration = $entityManager->loadClassConfiguration(get_class($object));
+        $entityConfiguration = $entityManager->configurationLoader->loadClassConfiguration(get_class($object));
 
         if (isset($entityConfiguration['lifecycle']['postCreate'])) {
             $staticMethodName = $entityConfiguration['lifecycle']['postCreate'];

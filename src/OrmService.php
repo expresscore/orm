@@ -713,7 +713,7 @@ class OrmService
                     $foreignKeyIndexes[$defaultKeyName] = $foreignKeyIndex;
 
                     $repositoryFK = self::$entityManager->createRepository($fieldProperties['entityClass']);
-                    $configFK = self::$entityManager->loadClassConfiguration($fieldProperties['entityClass']);
+                    $configFK = self::$entityManager->configurationLoader->loadClassConfiguration($fieldProperties['entityClass']);
                     $idFieldNameFK = ObjectMapper::getIdFieldName($configFK);
 
                     $foreignKey = self::$foreignKeySchema;
@@ -1014,7 +1014,7 @@ class OrmService
         $entityManager = self::$entityManager;
         $queries = [];
         foreach ($tables as $tableName => $tableData) {
-            $config = self::$entityManager->loadClassConfiguration($tableData['tableDefaults']['class']);
+            $config = self::$entityManager->configurationLoader->loadClassConfiguration($tableData['tableDefaults']['class']);
             $idFieldName = ObjectMapper::getIdFieldName($config);
             $queries[] = $entityManager::$dbAdapter->getQueryForCreateTable($tableName, $idFieldName, $tableData);
         }

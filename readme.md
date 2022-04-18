@@ -110,7 +110,7 @@ entity: test\orm\helpers\User
 
 Kolejnym obowiązkowym krokiem jest ustalenie, która klasa repozytorium będzie używana do obsługi tej encji. Obiekt określonej
 w tym miejscu klasy będzie odpowiedzialny za pobieranie obiektu klasy, którą konfigurujemy, z bazy danych. O ile nie planujemy
-rozszerzać mechanizmu pobierania o nowe funkcje, lub nadpisywać istniejących, to powinna być to domyślna klasa repozytorium,
+rozszerzać mechanizmu pobierania o nowe funkcje lub nadpisywać istniejących, to powinna być to domyślna klasa repozytorium,
 dostępna w bibliotece:
 
 ```yml

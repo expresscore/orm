@@ -11,11 +11,8 @@
 namespace expresscore\orm;
 
 use Exception;
-use expresscore\cache\Cache;
-use ReflectionClass;
 use ReflectionProperty;
 use RuntimeException;
-use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
 class EntityManager
@@ -26,11 +23,12 @@ class EntityManager
     private array $entitiesToSave = [];
     private array $collectionEntitiesToSave = [];
     private array $entitiesToRemove = [];
-    private array $classesConfigurations = [];
     private array $priorityArray = [];
+    public ?ConfigurationLoader $configurationLoader = null;
 
     public static ?DbAdapterInterface $dbAdapter;
     private static array $config;
+
 
     public static function create(DbAdapterInterface $dbAdapter = null, array $config = []) : self
     {
@@ -41,9 +39,10 @@ class EntityManager
 
         $entityManager = new self();
 
-        $entityManager->dbConnection = new DBConnection(self::$dbAdapter, self::$config['dsn'], self::$config['user'], self::$config['password'], $entityManager);
-        $entityManager->entityConfigurationDir = (isset(self::$config['entityConfigurationDir'])) ? self::$config['entityConfigurationDir'] : '';
         $entityManager->mode = (isset(self::$config['mode'])) ? self::$config['mode'] : 'prod';
+        $entityManager->entityConfigurationDir = (isset(self::$config['entityConfigurationDir'])) ? self::$config['entityConfigurationDir'] : '';
+        $entityManager->configurationLoader = new ConfigurationLoader($entityManager->entityConfigurationDir, $entityManager->mode);
+        $entityManager->dbConnection = new DBConnection(self::$dbAdapter, self::$config['dsn'], self::$config['user'], self::$config['password'], $entityManager->configurationLoader);
 
         if (!in_array($entityManager->mode, ['dev', 'prod'])) {
             throw  new Exception('Mode can be only [dev, prod]');
@@ -57,55 +56,15 @@ class EntityManager
         if (self::$dbAdapter === null) {
             throw new Exception('Please use create() method with configuration arguments');
         }
-
-        $this->dbConnection = new DBConnection(self::$dbAdapter, self::$config['dsn'], self::$config['user'], self::$config['password'], $this);
         $this->entityConfigurationDir = (isset(self::$config['entityConfigurationDir'])) ? self::$config['entityConfigurationDir'] : '';
         $this->mode = (isset(self::$config['mode'])) ? self::$config['mode'] : 'prod';
-    }
-
-    public function loadClassConfiguration(string $className)
-    {
-        $reflection = new ReflectionClass($className);
-        $shortClassName = $reflection->getShortName();
-        $filePath = $this->entityConfigurationDir . $shortClassName . '.orm.yml';
-
-        if (!file_exists($filePath)) {
-            throw new Exception('Configuration orm file ' . $filePath . ' does not exists.');
-        }
-
-        $variableName = 'config/orm/' . $className;
-
-        switch ($this->mode) {
-            case 'dev':
-                if (isset($this->classesConfigurations[$variableName])) {
-                    return $this->classesConfigurations[$variableName];
-                } else {
-                    $entityConfiguration = Yaml::parseFile($filePath);
-                    $entityConfiguration['filePath'] = realpath($reflection->getFileName());
-                    $entityConfiguration['configFilePath'] = realpath($filePath);
-                    $this->classesConfigurations[$variableName] = $entityConfiguration;
-
-                    return $entityConfiguration;
-                }
-            case 'prod':
-                if (Cache::checkIfVariableExistsInCache($variableName)) {
-                    return Cache::getVariableValueFromCache($variableName);
-                } else {
-                    $entityConfiguration = Yaml::parseFile($filePath);
-                    $entityConfiguration['filePath'] = realpath($reflection->getFileName());
-                    $entityConfiguration['configFilePath'] = realpath($filePath);
-                    Cache::setVariableValueInCache($variableName, $entityConfiguration, 600);
-
-                    return $entityConfiguration;
-                }
-        }
-
-        throw new Exception('Unexpected EntityManager mode: ' . $this->mode);
+        $this->configurationLoader = new ConfigurationLoader($this->entityConfigurationDir, $this->mode);
+        $this->dbConnection = new DBConnection(self::$dbAdapter, self::$config['dsn'], self::$config['user'], self::$config['password'], $this->configurationLoader);
     }
 
     public function createRepository(string $className) : Repository
     {
-        $entityConfiguration = $this->loadClassConfiguration($className);
+        $entityConfiguration = $this->configurationLoader->loadClassConfiguration($className);
 
         if (isset($entityConfiguration['repository'])) {
             $repositoryClassName = $entityConfiguration['repository'];
@@ -329,7 +288,7 @@ class EntityManager
 
     private function saveEntity(object $entity)
     {
-        $classConfiguration = $this->loadClassConfiguration(get_class($entity));
+        $classConfiguration = $this->configurationLoader->loadClassConfiguration(get_class($entity));
 
         if (isset($classConfiguration['lifecycle']['preUpdate'])) {
             $staticMethodName = $classConfiguration['lifecycle']['preUpdate'];
@@ -380,9 +339,7 @@ class EntityManager
                     $classProperties = [];
                     ObjectMapper::getClassProperties(get_class($entity), $classProperties, [$entityFields['identifier']['fieldName']]);
                     $identifierClassProperty = $classProperties[$entityFields['identifier']['fieldName']];
-                    //$visibilityLevel = ObjectMapper::setFieldAccessible($identifierClassProperty);
                     $identifierClassProperty->setValue($entity, $this->dbConnection->getLastInsertId());
-                    //ObjectMapper::setOriginalAccessibility($identifierClassProperty, $visibilityLevel);
                 }
 
                 if (isset($classConfiguration['lifecycle']['postUpdate'])) {
@@ -395,7 +352,7 @@ class EntityManager
 
     private function removeEntity(object $entity)
     {
-        $classConfiguration = $this->loadClassConfiguration(get_class($entity));
+        $classConfiguration = $this->configurationLoader->loadClassConfiguration(get_class($entity));
 
         if (isset($classConfiguration['lifecycle']['preRemove'])) {
             $staticMethodName = $classConfiguration['lifecycle']['preRemove'];
@@ -428,7 +385,6 @@ class EntityManager
         ObjectMapper::getClassProperties(get_class($entity), $classProperties, [$idFieldName]);
         $idFieldReflectionProperty = $classProperties[$idFieldName];
 
-        //ObjectMapper::setFieldAccessible($idFieldReflectionProperty);
         $idFieldReflectionProperty->setValue($entity, null);
 
         if (isset($classConfiguration['lifecycle']['postRemove'])) {
@@ -455,7 +411,7 @@ class EntityManager
                 $this->priorityArray[spl_object_id($entityToSave)] = 0;
             }
 
-            $classConfiguration = $this->loadClassConfiguration(get_class($entityToSave));
+            $classConfiguration = $this->configurationLoader->loadClassConfiguration(get_class($entityToSave));
             $entityOrCollectionFields = ObjectFactory::filterFieldsByType($classConfiguration['fields'], ['entity', 'collection']);
             $idFieldParent = ObjectMapper::getIdFieldName($classConfiguration);
 
@@ -464,9 +420,7 @@ class EntityManager
 
             $idParentReflectionProperty = $classProperties[$idFieldParent];
             unset($classProperties[$idFieldParent]);
-            //$visibilityLevel = ObjectMapper::setFieldAccessible($idParentReflectionProperty);
             $parentId = $idParentReflectionProperty->getValue($entityToSave);
-            //ObjectMapper::setOriginalAccessibility($idParentReflectionProperty, $visibilityLevel);
 
             foreach ($entityOrCollectionFields as $fieldName => $fieldData) {
 
@@ -474,7 +428,6 @@ class EntityManager
                 $property = $classProperties[$fieldName];
 
                 $object = null;
-                //$visibilityLevel = ObjectMapper::setFieldAccessible($property);
                 if ($property->isInitialized($entityToSave)) {
                     $object = $property->getValue($entityToSave);
                 }
@@ -487,7 +440,7 @@ class EntityManager
 
                     $allCollectionObjectsIds = [];
                     $allCollectionObjectsCollection = new Collection($classConfiguration['fields'][$fieldName]['entityClass']);
-                    $collectionElementConfiguration = $this->loadClassConfiguration($classConfiguration['fields'][$fieldName]['entityClass']);
+                    $collectionElementConfiguration = $this->configurationLoader->loadClassConfiguration($classConfiguration['fields'][$fieldName]['entityClass']);
 
                     $idFieldCollectionElement = ObjectMapper::getIdFieldName($collectionElementConfiguration);
 
@@ -497,7 +450,7 @@ class EntityManager
                         } elseif (!isset($fieldData['relatedObjectField']) && isset($fieldData['joiningClass'])) {
                             throw new Exception('Field "relatedObjectField" is required when field "joiningClass" is defined in entity configuration (orm file)');
                         } else {
-                            $collectionElementConfiguration = $this->loadClassConfiguration($fieldData['joiningClass']);
+                            $collectionElementConfiguration = $this->configurationLoader->loadClassConfiguration($fieldData['joiningClass']);
                             $idFieldCollectionElement = ObjectMapper::getIdFieldName($collectionElementConfiguration);
                         }
 
@@ -516,12 +469,9 @@ class EntityManager
                                 ObjectMapper::getClassProperties(get_class($collectionObject), $collectionElementProperties, [$idFieldCollectionElement]);
                                 /** @var ReflectionProperty $collectionElementIdProperty */
                                 $collectionElementIdProperty = $collectionElementProperties[$idFieldCollectionElement];
-                                //$visibilityLevelCollectionElement = ObjectMapper::setFieldAccessible($collectionElementIdProperty);
 
                                 $collectionElementId = $collectionElementIdProperty->getValue($collectionObject);
                                 $allCollectionObjectsIds[$collectionElementId] = $collectionElementId;
-
-                                //ObjectMapper::setOriginalAccessibility($collectionElementIdProperty, $visibilityLevelCollectionElement);
                             }
                         }
 
@@ -539,18 +489,12 @@ class EntityManager
                             /** @var ReflectionProperty $collectionElementIdProperty */
                             $collectionElementIdProperty = $collectionElementProperties[$idFieldCollectionElement];
 
-                            //$collectionElementJoiningFieldVisiblility = ObjectMapper::setFieldAccessible($collectionElementJoiningFieldProperty);
-                            //$collectionElementIdVisiblility = ObjectMapper::setFieldAccessible($collectionElementIdProperty);
-
                             $collectionElementJoiningFieldProperty->setValue($joiningEntity, $entityToSave);
                             $flushedCollectionElementId = $collectionElementIdProperty->getValue($joiningEntity);
 
                             if (($flushedCollectionElementId !== null) && (isset($allCollectionObjectsIds[$flushedCollectionElementId]))) {
                                 unset($allCollectionObjectsIds[$flushedCollectionElementId]);
                             }
-
-                            //ObjectMapper::setOriginalAccessibility($collectionElementJoiningFieldProperty, $collectionElementJoiningFieldVisiblility);
-                            //ObjectMapper::setOriginalAccessibility($collectionElementIdProperty, $collectionElementIdVisiblility);
 
                             $this->addObjectToSaveEntityQueue($collectionElement, $entityIndex, $additionalObjectsToFlush, 'collectionElement');
                             $this->addObjectToSaveEntityQueue($joiningEntity, $entityIndex, $additionalObjectsToFlush, 'collectionElement');
@@ -573,12 +517,9 @@ class EntityManager
                                 ObjectMapper::getClassProperties(get_class($collectionObject), $collectionElementProperties, [$idFieldCollectionElement]);
                                 /** @var ReflectionProperty $collectionElementIdProperty */
                                 $collectionElementIdProperty = $collectionElementProperties[$idFieldCollectionElement];
-                                //$visibilityLevelCollectionElement = ObjectMapper::setFieldAccessible($collectionElementIdProperty);
 
                                 $collectionElementId = $collectionElementIdProperty->getValue($collectionObject);
                                 $allCollectionObjectsIds[$collectionElementId] = $collectionElementId;
-
-                                //ObjectMapper::setOriginalAccessibility($collectionElementIdProperty, $visibilityLevelCollectionElement);
                             }
                         }
 
@@ -591,18 +532,12 @@ class EntityManager
                             /** @var ReflectionProperty $collectionElementIdProperty */
                             $collectionElementIdProperty = $collectionElementProperties[$idFieldCollectionElement];
 
-                            //$collectionElementJoiningFieldVisiblility = ObjectMapper::setFieldAccessible($collectionElementJoiningFieldProperty);
-                            //$collectionElementIdVisiblility = ObjectMapper::setFieldAccessible($collectionElementIdProperty);
-
                             $collectionElementJoiningFieldProperty->setValue($collectionElement, $entityToSave);
                             $flushedCollectionElementId = $collectionElementIdProperty->getValue($collectionElement);
 
                             if (($flushedCollectionElementId !== null) && (isset($allCollectionObjectsIds[$flushedCollectionElementId]))) {
                                 unset($allCollectionObjectsIds[$flushedCollectionElementId]);
                             }
-
-                            //ObjectMapper::setOriginalAccessibility($collectionElementJoiningFieldProperty, $collectionElementJoiningFieldVisiblility);
-                            //ObjectMapper::setOriginalAccessibility($collectionElementIdProperty, $collectionElementIdVisiblility);
 
                             $this->addObjectToSaveEntityQueue($collectionElement, $entityIndex, $additionalObjectsToFlush, 'collectionElement');
                             $this->priorityArray[spl_object_id($collectionElement)] = $depth;
@@ -621,8 +556,6 @@ class EntityManager
                 } elseif ((!(is_object($object) && (get_class($object) == LazyCollection::class))) and (isset($object))) {
                     throw new Exception('whats that?!!');
                 }
-
-                //ObjectMapper::setOriginalAccessibility($property, $visibilityLevel);
             }
         }
 
