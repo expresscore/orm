@@ -166,7 +166,7 @@ class OrmService
         'collection' => ['entityClass', 'joiningField'],
     ];
 
-    public static function route(array $arguments)
+    public static function route(array $arguments) : void
     {
         [$config, $arguments] = self::readParameters($arguments);
 
@@ -254,7 +254,7 @@ class OrmService
         return [$config, $arguments];
     }
 
-    public static function importAction(array $config, array $arguments)
+    public static function importAction(array $config, array $arguments) : void
     {
         switch ($arguments[2]) {
             case 'fixtures':
@@ -302,7 +302,7 @@ class OrmService
         echo 'Fixtures import status: OK' . PHP_EOL;
     }
 
-    public static function generateAction(array $config, array $arguments)
+    public static function generateAction(array $config, array $arguments) : void
     {
         switch ($arguments[2]) {
             case 'migration':

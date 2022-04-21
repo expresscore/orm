@@ -64,7 +64,7 @@ class ObjectFactory {
         return $fields;
     }
 
-    private static function addOrmInitializedProperty(array $class)
+    private static function addOrmInitializedProperty(array $class) : void
     {
         $propertyProperty = new PropertyProperty('___orm_initialized');
         $propertyProperty->default = new ConstFetch(new Name('false'));
@@ -84,12 +84,12 @@ class ObjectFactory {
         return $newClassNameArray;
     }
 
-    private static function modifyNamespace($objectClass, array $namespace)
+    private static function modifyNamespace($objectClass, array $namespace) : void
     {
         $namespace[0]->name->parts = self::getNewNamespace($objectClass);
     }
 
-    private static function addExtendingClassUse($objectClass, array $namespace)
+    private static function addExtendingClassUse($objectClass, array $namespace) : void
     {
         $objectClassArray = explode('\\', $objectClass);
         $useUse = new UseUse(new Name($objectClassArray));
@@ -137,7 +137,7 @@ class ObjectFactory {
         return $addedClasses;
     }
 
-    private static function addReturnTypeUses(array $namespace, array $classes, array $addedClasses = [])
+    private static function addReturnTypeUses(array $namespace, array $classes, array $addedClasses = []) : void
     {
         foreach ($classes as $className) {
             if (!isset($addedClasses[$className])) {
@@ -148,7 +148,7 @@ class ObjectFactory {
         }
     }
 
-    private static function modifyClassExtends($objectClass, array $class)
+    private static function modifyClassExtends($objectClass, array $class) : void
     {
 //        if ($class[0]->extends === null) {
             $class[0]->extends = new Name(implode(explode('\\', $objectClass)));
@@ -368,7 +368,7 @@ class ObjectFactory {
         return [$className, $originalProxyClassName, $entityManager->configurationLoader->loadClassConfiguration($objectClass)];
     }
 
-    private static function getClassesToAnalyze(string $objectClass, EntityManager $entityManager, &$classesToAnalyze)
+    private static function getClassesToAnalyze(string $objectClass, EntityManager $entityManager, &$classesToAnalyze) : void
     {
         $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
 

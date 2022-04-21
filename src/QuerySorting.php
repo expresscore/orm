@@ -30,7 +30,7 @@ class QuerySorting {
         }
     }
 
-    public function addField(string $fieldName, string $sortDirection, array $orderedDirection = [], $orderedDirectionAscDesc = self::DIRECTION_ASC)
+    public function addField(string $fieldName, string $sortDirection, array $orderedDirection = [], $orderedDirectionAscDesc = self::DIRECTION_ASC) : void
     {
         $field['fieldName'] = $fieldName;
         $field['sortDirection'] = $sortDirection;
@@ -45,7 +45,7 @@ class QuerySorting {
         return $this->fields;
     }
 
-    public function clear()
+    public function clear() : void
     {
         $this->fields = [];
     }

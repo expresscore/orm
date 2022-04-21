@@ -271,12 +271,12 @@ class EntityManager
         return $this->dbConnection->getValue($query, $parameters);
     }
 
-    public function persist(object $entity)
+    public function persist(object $entity) : void
     {
         $this->entitiesToSave[] = $entity;
     }
 
-    public function remove(object $entity)
+    public function remove(object $entity) : void
     {
         $this->entitiesToRemove[] = $entity;
     }
@@ -286,7 +286,7 @@ class EntityManager
         return $this->dbConnection;
     }
 
-    private function saveEntity(object $entity)
+    private function saveEntity(object $entity) : void
     {
         $classConfiguration = $this->configurationLoader->loadClassConfiguration(get_class($entity));
 
@@ -350,7 +350,7 @@ class EntityManager
         }
     }
 
-    private function removeEntity(object $entity)
+    private function removeEntity(object $entity) : void
     {
         $classConfiguration = $this->configurationLoader->loadClassConfiguration(get_class($entity));
 
@@ -393,14 +393,14 @@ class EntityManager
         }
     }
 
-    private function addObjectToSaveEntityQueue(object $object, $entityIndex, &$additionalObjectsToFlush, $elementType)
+    private function addObjectToSaveEntityQueue(object $object, $entityIndex, &$additionalObjectsToFlush, $elementType) : void
     {
         if ((isset($object->___orm_initialized) && ($object->___orm_initialized === true)) || (!isset($object->___orm_initialized))) {
             $additionalObjectsToFlush[$entityIndex][$elementType][] = $object;
         }
     }
 
-    private function findObjectPropertiesForObjectToFlush(array $objectArray, int $depth = 1)
+    private function findObjectPropertiesForObjectToFlush(array $objectArray, int $depth = 1) : void
     {
         $additionalObjectsToFlush = [];
         $additionalObjectToRemove = [];
@@ -432,7 +432,7 @@ class EntityManager
                     $object = $property->getValue($entityToSave);
                 }
 
-                if (($object !== null) && ((isset($object->___orm_initialized) && $object->___orm_initialized == false))) {
+                if (($object !== null) && ((isset($object->___orm_initialized) && !$object->___orm_initialized))) {
                     continue;
                 }
 
@@ -590,7 +590,7 @@ class EntityManager
         $this->entitiesToRemove = array_unique(array_merge($this->entitiesToRemove, $additionalObjectToRemove), SORT_REGULAR);
     }
 
-    public function flush()
+    public function flush() : void
     {
         $this->findObjectPropertiesForObjectToFlush($this->entitiesToSave);
 
@@ -690,19 +690,19 @@ class EntityManager
         return $result ? $matches[1] : $default;
     }
 
-    public function turnOffCheckForeignKeys()
+    public function turnOffCheckForeignKeys() : void
     {
         $query = self::$dbAdapter->getQueryForTurnOffForeignKeyCheck();
         $this->dbConnection->executeQuery($query);
     }
 
-    public function turnOnCheckForeignKeys()
+    public function turnOnCheckForeignKeys() : void
     {
         $query = self::$dbAdapter->getQueryForTurnOnForeignKeyCheckQuery();
         $this->dbConnection->executeQuery($query);
     }
 
-    public function truncateTable($tableName)
+    public function truncateTable($tableName) : void
     {
         $query = self::$dbAdapter->getQueryForTruncateTable($tableName);
         $this->dbConnection->executeQuery($query);

@@ -19,7 +19,7 @@ abstract class AbstractMigration {
         $this->entityManager = $entityManager;
     }
 
-    public function executeQuery($query)
+    public function executeQuery($query) : void
     {
         echo $query . PHP_EOL;
         $this->entityManager->getDbConnection()->executeQuery($query);

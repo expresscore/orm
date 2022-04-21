@@ -107,7 +107,7 @@ class DBConnection
         return $this->connection->lastInsertId();
     }
 
-    public function executeQuery(string $query, array $parameters = [])
+    public function executeQuery(string $query, array $parameters = []) : void
     {
         $statement = $this->bindParameters($query, $parameters);
 

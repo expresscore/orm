@@ -33,12 +33,12 @@ class QueryBuilder
         $this->className = $className;
     }
 
-    public function clearFields()
+    public function clearFields() : void
     {
         $this->fields = [];
     }
 
-    public function clear()
+    public function clear() : void
     {
         $this->fields = [];
         $this->joins = [];

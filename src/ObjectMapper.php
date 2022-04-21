@@ -35,7 +35,7 @@ class ObjectMapper {
         }
     }
 
-    public static function getClassProperties(string $className, array &$reflectionObjectFields, array $specificProperties = [])
+    public static function getClassProperties(string $className, array &$reflectionObjectFields, array $specificProperties = []) : void
     {
         $reflectionClass = new ReflectionClass($className);
 
